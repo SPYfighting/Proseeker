@@ -1,0 +1,38 @@
+# Core
+torch==2.3.1
+transformers==4.43.3
+peft==0.12.0
+accelerate==0.33.0
+numpy==1.26.4
+pandas==2.2.2
+scipy==1.13.1
+scikit-learn==1.4.2
+
+# Graph Neural Networks (version B )
+torch-geometric==2.5.0
+torch-scatter==2.1.2
+torch-sparse==0.6.18
+torch-cluster==1.6.3
+
+# Bio / ESM
+fair-esm==2.0.0
+biopython==1.83
+
+# Visualization
+matplotlib==3.8.4
+seaborn==0.13.2
+plotly==5.22.0
+
+# Utils
+pyyaml==6.0.2
+tqdm==4.66.4
+requests==2.32.3
+optuna==3.6.1
+
+# Optional UI
+streamlit==1.36.0
+
+# Dev
+pytest==8.2.0
+black==24.8.0
+flake8==7.1.1

@@ -1,0 +1,43 @@
+device: cuda
+random_seed: 42
+
+paths:
+  data_dir: data
+  outputs_dir: outputs
+  models_dir: outputs/models
+  logs_dir: outputs/logs
+  mlm_model_dir: outputs/mlm
+  ensemble_dir: outputs/ensemble
+
+model:
+  esm_model_name: facebook/esm2_t33_650M_UR50D
+  max_len: 512
+  lora:
+    enabled: true
+    r: 8
+    alpha: 16
+    dropout: 0.05
+    target_modules: ["query", "value"]
+
+training:
+  mlm:
+    epochs: 10
+    batch_size: 8
+    learning_rate: 5e-4
+    freeze_layers: 10
+  ranker:
+    epochs: 10
+    batch_size: 16
+    learning_rate: 2e-5
+    gradient_accumulation_steps: 1  # Set to 2/4/8 if GPU memory is insufficient
+
+active_learning:
+  use_mc_dropout: true
+  mc_passes: 10
+  acquisition_temperature: 0.5
+  micro_steps: 200
+  generate_candidates: 50
+
+benchmark:
+  topk: 10
+  hit_ratio: 0.1
