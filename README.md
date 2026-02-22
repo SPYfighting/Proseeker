@@ -15,7 +15,7 @@ This is a standalone, fully functional version that does not depend on external 
 - **Robustness**: Supports running from any directory with comprehensive error handling
 - **CI Support**: GitHub Actions automated testing
 
-## Quick Start (Windows)
+## Quick Start
 ```bash
 python -m venv .venv && .\.venv\Scripts\activate
 pip install -r requirements.txt
