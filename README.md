@@ -56,14 +56,6 @@ standalone/
   OPERATIONS.md     # Detailed operation guide
 ```
 
-## Major Improvements
-
-1. **LoRA Configuration Fix**: Uses correct TaskType, automatically detects target modules
-2. **Unified Export Format**: All models unified to merged weight format, avoiding compatibility issues
-3. **Active Learning Loop**: Added sampling step (TopK + diversity constraints)
-4. **Enhanced Evaluation**: Supports stratified analysis, visualization reports, calibration curves
-5. **Data Validation**: Sequence validity checking, column name mapping, improved error messages
-6. **Engineering**: Complete CI, testing, and project management files
 
 ## Environment Requirements
 
