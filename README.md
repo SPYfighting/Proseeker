@@ -1,17 +1,7 @@
-# ESM2+LoRA Active Learning Pipeline for Protein Engineering
+# Active Learning Pipeline for Protein Engineering
 
-This is a standalone, fully functional version that does not depend on external modules. It includes: configuration, dependencies, source code modules, complete pipeline scripts, evaluation and testing.
+Proseeker is an active learning model for virtual directed evolution of proteins.
 
-## Core Features
-
-- **Automatic LoRA Detection**: Automatically identifies ESM2 modules and injects LoRA with confirmation messages
-- **Unified Export Format**: Automatically merges weights after training to avoid mixed states
-- **Active Learning Loop**: Prediction → Sampling (TopK + diversity) → Iterative optimization
-- **Data Validation**: Sequence validity checking, column name mapping, length control
-- **Streamlit UI**: Batch scoring, single mutation scanning
-- **Gradient Accumulation**: Supports training on low-memory GPUs (configurable)
-- **Reproducibility**: Unified random seed control ensures consistent results
-- **Robustness**: Supports running from any directory with comprehensive error handling
 
 ## Quick Start
 ```bash
@@ -37,12 +27,10 @@ standalone/
   pipeline/         # Complete pipeline scripts (01-06)
   src/              # Evaluation and visualization modules
   utils/            # Dataset and model utilities
-  ui/               # Streamlit UI
   tests/            # Unit tests
   data/             # Example data
   .github/workflows/ # CI configuration
   requirements.txt  # Dependency lock
-  Dockerfile        # Docker image
   config.py         # Default configuration (environment variable override)
   README.md         # This file
   OPERATIONS.md     # Detailed operation guide
