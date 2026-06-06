@@ -1,9 +1,7 @@
 # PROseeker: Active Learning Pipeline for Protein Engineering
 
 PROseeker is a active-learning framework for the virtual directed
-evolution of proteins. It was used to engineer faster terminal deoxynucleotidyl
-transferase (TdT) variants for enzymatic DNA synthesis.
-
+evolution of proteins. 
 ## Model overview
 
 PROseeker ranks candidate variants by their predicted activity gain relative to
