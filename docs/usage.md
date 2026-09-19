@@ -17,9 +17,9 @@ see the [TdT demo](demo.md).
    models, with ten Monte Carlo dropout passes per model to estimate a mean and
    predictive dispersion.
 
-UCB scores (`mean + beta * std`) assist candidate ranking. Final experimental candidates are selected manually using the predicted
-mean, predictive dispersion, library constraints, experimental feasibility and
-the objectives of each round.
+UCB scores (`mean + beta * std`) assist candidate ranking. Final experimental
+candidates are selected manually using the predicted mean, predictive dispersion,
+library constraints, experimental feasibility and the objectives of each round.
 
 ## Input data
 
@@ -64,19 +64,22 @@ and candidate formats.
 | Select experimental candidates | Manual selection from predictions | Candidates for experimental testing |
 | Update and generate candidates | `pipeline/iterative_optimize.py --round N` | `outputs/iter_opt/round_N/new_candidates.csv` |
 
-`config.py` provides the common paths and model settings. Training and
-hyperparameter search also read selected fields from `configs/default.yaml`.
-Prediction and iterative optimization use `config.py` and its environment
-variables; they do not load YAML settings.
+These commands use `config.py` and its environment variables for paths and model
+settings. The default device is CUDA; use `export DEVICE=cpu` for CPU execution.
 
 ```bash
-python pipeline/hparam_search.py --config configs/default.yaml
-python pipeline/train_ensemble.py --config configs/default.yaml
+python pipeline/hparam_search.py
+python pipeline/train_ensemble.py
 python pipeline/predict_with_uncertainty.py
 ```
 
-For iterative optimization, provide manually chosen parent sequences in a CSV
-with a `sequence` column and set `--top_k` to the number to use:
+Training and hyperparameter search optionally accept `--config` for a YAML file.
+Its supported fields override the environment settings. Prediction and iterative
+optimization do not read YAML, so keep their paths and device consistent.
+
+For iterative optimization, first supply the current round's measured pairs in
+`DATA_DIR/measured_pairs_roundN.csv`. Provide manually chosen parent sequences
+in a CSV with a `sequence` column and set `--top_k` to the number to use:
 
 ```bash
 python pipeline/iterative_optimize.py --round 1 \
@@ -85,9 +88,11 @@ python pipeline/iterative_optimize.py --round 1 \
 
 Without a manual parent file, the script selects parents by predicted score.
 Candidate generation and final experimental selection are separate steps.
-The helpers `tools/convert_predictions_to_mutations.py` and
-`tools/add_multi_ucb.py` convert sequences to mutation notation and add UCB scores
-at different beta values.
+`tools/add_multi_ucb.py` adds UCB scores at different beta values.
+`tools/convert_predictions_to_mutations.py` uses the built-in TdT reference
+sequence and adds 130 to sequence positions: the first residue is numbered 131.
+For another protein or numbering scheme, set `WT_SEQUENCE` and `POSITION_OFFSET`
+in that script accordingly.
 
 ### Optional MLM adaptation
 
