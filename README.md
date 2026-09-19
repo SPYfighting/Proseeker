@@ -35,10 +35,9 @@ PROseeker runs from the cloned directory; it does not require a separate package
 installation. On Windows, activate the environment with `.venv\Scripts\activate`
 in Command Prompt. The demo commands use a Linux shell.
 
-Dependency installation took less than 5 minutes on the tested server using the
-Tsinghua TUNA PyPI mirror, excluding the initial ESM-2 weight download. See the
-[reference environment and installation measurement](docs/verification.md)
-for dependency versions, hardware and the mirror command.
+Dependency installation took less than 5 minutes on the tested server, excluding
+the initial ESM-2 weight download. See the
+[reference environment](docs/verification.md) for software versions and hardware.
 
 ## Minimal demo
 

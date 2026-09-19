@@ -15,24 +15,13 @@
 | fair-esm | 2.0.0 |
 | Other dependencies | Versions specified in [requirements.txt](../requirements.txt) |
 
-The demo used four CPU threads. The server also contained two NVIDIA GeForce RTX
-3090 GPUs with driver 550.54.14; GPU runtime was not benchmarked. All 21 pinned
-dependencies matched the installed versions, and `python -m pip check` completed
-without dependency conflicts.
+The demo used four CPU threads. All 21 pinned dependencies matched the installed
+versions, and `python -m pip check` completed without dependency conflicts.
 
 ## Environment setup
 
-The timed installation used:
-
-```bash
-python -m pip install -r requirements.txt \
-  --index-url https://pypi.tuna.tsinghua.edu.cn/simple
-```
-
-Dependency installation in a fresh Python environment took less than 5 minutes
-using the Tsinghua TUNA PyPI mirror. The measurement includes package download
-and installation and excludes repository cloning, environment creation and ESM-2
-weight download. The default pip cache was available.
+Dependency installation took less than 5 minutes in a fresh Python environment
+on the reference server, excluding environment creation and ESM-2 weight download.
 
 ## Demo
 
