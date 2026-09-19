@@ -13,7 +13,7 @@ class DeltaRanker(nn.Module):
     Parent and child sequences are encoded by a shared ESM-2 backbone (a
     twin / Siamese encoder). The difference of their [CLS] (first-token)
     embeddings is passed through a dropout + linear head to predict the
-    normalized activity gain of the child relative to the parent.
+    child-minus-parent difference on the scale of the training labels.
     """
     def __init__(self, esm_backbone: EsmModel, dropout_rate: float = 0.1):
         super().__init__()

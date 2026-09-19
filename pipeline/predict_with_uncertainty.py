@@ -63,7 +63,7 @@ def main(cfg_path: str | None = None):
         try:
             model, _, bundle_cfg = load_model_bundle(member_dir, dropout_rate=dropout, device=config.DEVICE)
         except (FileNotFoundError, OSError, KeyError) as e:
-            print(f"Warning [Member {i+1}]: Bundle loading failed, trying traditional method: {e}")
+            print(f"Warning [Member {i+1}]: Bundle loading failed; retrying with model.pt: {e}")
             model = load_model_for_finetune(dropout_rate=dropout).to(config.DEVICE)
             mp = os.path.join(member_dir, 'model.pt')
             if os.path.exists(mp):

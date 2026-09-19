@@ -1,114 +1,78 @@
-# PROseeker: Active Learning Pipeline for Protein Engineering
+# PROseeker: Active learning for protein engineering
 
-PROseeker is a active-learning framework for the virtual directed
-evolution of proteins. 
-## Model overview
+PROseeker ranks protein variants by their predicted activity difference from a
+parent sequence. The examples use terminal deoxynucleotidyl transferase (TdT)
+variants.
 
-PROseeker ranks candidate variants by their predicted activity gain relative to
-a parent sequence:
+## Overview
 
-1. Backbone: a pre-trained protein language model, ESM-2 650M
-   (`facebook/esm2_t33_650M_UR50D`), optionally domain-adapted by masked-language
-   modeling (MLM) on TdT-family sequences.
-2. Adapter: LoRA fine-tuning (rank 8, alpha 16, dropout 0.05) on the attention
-   query/value projections.
-3. Ranker (`DeltaRanker`): a twin (Siamese) head. Parent and child sequences are
-   encoded by the shared backbone, and the difference of their first-token
-   (`[CLS]`) embeddings is passed through a dropout + linear layer to predict the
-   normalized activity gain `A_norm(child) - A_norm(parent)`.
-4. Uncertainty: an ensemble of 5 independently seeded rankers, each with
-   Monte-Carlo dropout (10 stochastic passes), gives a predictive mean and
-   variance (epistemic + aleatoric). An upper-confidence-bound (UCB) score,
-   `mean + beta * std`, is reported for ranking candidates.
+PROseeker combines the ESM-2 650M protein language model with LoRA fine-tuning
+and a ranker that compares parent and child sequence embeddings. It predicts
+the child-minus-parent difference on the scale of the supplied training labels;
+the TdT examples use log-activity differences.
 
-No structural, graph-based, or external annotation features are used.
+An ensemble with Monte Carlo dropout provides a mean prediction and predictive
+dispersion. UCB scores assist ranking. Final experimental candidates are selected
+manually, considering the predictions, library constraints and experimental
+feasibility.
 
-## Quick Start
+See the [model and workflow guide](docs/usage.md) for details.
+
+## Installation
+
+The reference environment uses Ubuntu 20.04 and Python 3.10.14. With Python 3.10
+installed, run:
 
 ```bash
-python -m venv .venv && .\.venv\Scripts\activate   # Windows
-# source .venv/bin/activate                        # Linux/macOS
-pip install -r requirements.txt
-
-# (0) Build pairwise training data from labeled mutants
-python -m utils.generate_pairwise_training_pairs_smart \
-    --input labeled_data.csv --output training_pairs.csv
-
-# Run the full pipeline with one command
-python pipeline/run_all.py --config configs/default.yaml
-
-# Or run step by step (see "Pipeline steps" below)
+git clone https://github.com/xmuzhanglab/Proseeker.git
+cd Proseeker
+python3.10 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
 ```
 
-`run_all.py` runs these stages in order: mlm, hparam, ensemble, predict, iter.
-Use `--skip` to skip any of them, e.g. `--skip mlm hparam`.
+PROseeker runs from the cloned directory; it does not require a separate package
+installation. On Windows, activate the environment with `.venv\Scripts\activate`
+in Command Prompt. The demo commands use a Linux shell.
 
-## Pipeline steps
+Dependency installation took less than 5 minutes on the tested server using the
+Tsinghua TUNA PyPI mirror, excluding the initial ESM-2 weight download. See the
+[reference environment and installation measurement](docs/verification.md)
+for dependency versions, hardware and the mirror command.
 
-| Step | Script | Input | Output |
-|------|--------|-------|--------|
-| 0. Build pairs | `utils/generate_pairwise_training_pairs_smart.py` | `data/labeled_data.csv` | `data/training_pairs.csv` |
-| 1. MLM fine-tune (optional) | `pipeline/mlm_pretrain.py` | `data/homologous_sequences.fasta` | `outputs/mlm_finetune_lora/` |
-| 2. Hyperparameter search | `pipeline/hparam_search.py` | `data/training_pairs.csv` | `outputs/best_hparams.json` |
-| 3. Train ensemble | `pipeline/train_ensemble.py` | `data/training_pairs.csv` | `outputs/ensemble/member_*/` |
-| 4. Predict + uncertainty | `pipeline/predict_with_uncertainty.py` | `data/candidates.csv` | `outputs/predictions_with_uncertainty.csv` |
-| 5. Select candidates | (manual) | predictions CSV | shortlist to test in the lab |
-| 6. Iterative optimization | `pipeline/iterative_optimize.py --round N` | `data/measured_pairs_round{N}.csv` | `outputs/iter_opt/round_N/new_candidates.csv` |
+## Minimal demo
 
-Step 5 is manual: inspect `predictions_with_uncertainty.csv` (which contains
-`mean_score`, the variance terms, and `ucb_score`) and pick the variants to
-assay. The optional helpers `tools/convert_predictions_to_mutations.py` and
-`tools/add_multi_ucb.py` can convert sequences to mutation notation and append UCB
-columns at several `beta` values to assist this choice.
+The [TdT demo](docs/demo.md#run-the-demo) trains two ensemble members on four
+sequence pairs and predicts two candidate pairs. It includes:
 
-Example single-step commands:
+- Complete commands to copy the supplied examples, train and predict.
+- The demo settings and training-label definitions.
+- Expected files and prediction-column descriptions.
 
-```bash
-python pipeline/mlm_pretrain.py --config configs/default.yaml
-python pipeline/hparam_search.py --config configs/default.yaml
-python pipeline/train_ensemble.py --config configs/default.yaml
-python pipeline/predict_with_uncertainty.py
-python pipeline/iterative_optimize.py --config configs/default.yaml --round 1
+Training and prediction together took less than 5 minutes on the reference CPU
+with cached ESM-2 weights. The first run downloads these weights if needed.
+
+The result is written to:
+
+```text
+outputs/demo_run/predictions_with_uncertainty.csv
 ```
 
-## Input data formats
+The CSV contains two rows with predicted differences, variance estimates and UCB
+scores. The demo demonstrates the workflow; it does not estimate predictive
+accuracy.
 
-Place these files under `data/` (paths configurable in `config.py`). See
-`data/example_training_pairs.csv` and `data/example_candidates.csv` for the
-expected column layout.
+## Documentation
 
-- `labeled_data.csv`: columns `sequence` (or `child`) and `label` (activity).
-- `training_pairs.csv`: columns `parent`, `child`, `label` (activity difference).
-- `candidates.csv`: columns `parent`, `child` (variants to score).
-- `measured_pairs_round{N}.csv`: columns `parent`, `child`, `label` for round N.
-- `homologous_sequences.fasta`: TdT-family sequences for MLM fine-tuning.
+| Guide | Contents |
+|---|---|
+| [TdT demo](docs/demo.md) | Example data, commands, settings and output |
+| [Using your own data](docs/usage.md) | Input formats, model, pipeline and candidate selection |
+| [Software verification](docs/verification.md) | Tested environment, installation time and validation results |
 
-## Directory structure
-
-```
-Proseeker/
-  configs/          # YAML configuration files (default.yaml)
-  pipeline/         # Pipeline scripts (mlm_pretrain, hparam_search,
-                    #   train_ensemble, predict_with_uncertainty,
-                    #   iterative_optimize, run_all)
-  src/              # Evaluation and visualization modules
-  utils/            # Dataset, model, data-generation utilities
-  tools/            # Post-processing helpers (mutation notation, UCB columns)
-  data/             # Example / input data
-  config.py         # Default configuration (environment-variable overridable)
-  requirements.txt  # Pinned dependencies
-  README.md         # This file
-```
-
-## Environment requirements
-
-- Python 3.8+
-- PyTorch 2.0+ (CUDA optional; set `DEVICE=cpu` to run on CPU)
-- Other dependencies: see `requirements.txt`
-
-Configuration can be overridden via environment variables (see `config.py`),
-e.g. `DEVICE`, `BASE_ESM_MODEL`, `RANDOM_SEED`.
+The demo covers ensemble training and prediction. Requirements for optional MLM
+adaptation are described in the [usage guide](docs/usage.md#optional-mlm-adaptation).
 
 ## License
 
-MIT License
+[MIT License](LICENSE).

@@ -4,9 +4,7 @@ Append UCB columns at several exploration weights (beta) to a predictions file.
 
 UCB(c) = mean_score(c) + beta * sqrt(total_variance(c))
 
-This is an optional convenience helper; candidate selection itself can also be
-done manually (e.g. in a spreadsheet) from the `mean_score` / `total_variance`
-columns produced by predict_with_uncertainty.py.
+Input columns: mean_score and total_variance.
 """
 import argparse
 from pathlib import Path

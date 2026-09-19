@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 """
-Hyperparameter Search (sequence-only)
+Hyperparameter search for the sequence ranker.
 
-This version splits the training/validation sets by unique child sequences
-to prevent data leakage from the same child sequence appearing in both sets.
+Training and validation sets contain distinct child sequences.
 """
 import os
 import sys
@@ -237,4 +236,3 @@ if __name__ == "__main__":
     ap.add_argument("--config", type=str, default=None)
     a = ap.parse_args()
     main(a.config)
-    

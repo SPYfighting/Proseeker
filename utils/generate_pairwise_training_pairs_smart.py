@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Smart sampling version of pairwise training pairs generator
+Generate training pairs by sampling within and across activity strata.
 
 Input (default: data/labeled_data.csv):
 - Required columns: `label` (activity value), `sequence` or `child` (sequence)
@@ -8,12 +8,8 @@ Input (default: data/labeled_data.csv):
 Output (default: data/training_pairs.csv):
 - Columns: `parent`, `child`, `label` (difference)
 
-Usage example (run from the project root directory):
-    # Method 1: Run as module (recommended)
+Run from the project root directory:
     python -m utils.generate_pairwise_training_pairs_smart
-
-    # Method 2: Direct run (ensure in the project root directory)
-    python utils/generate_pairwise_training_pairs_smart.py
 """
 
 import argparse
@@ -60,9 +56,10 @@ def stratify_by_activity(labels, n_strata=3):
 
 def calculate_pair_info_score(labels, i, j):
     """
-    Calculate information score for pair (i, j)
-    
-    Information = |label_j - label_i| * (cross-strata bonus + boundary bonus)
+    Score a pair by its absolute label difference.
+
+    Multiply by 1.5 when the difference exceeds 1.5 times the median gap
+    between adjacent sorted labels.
     """
     delta = abs(labels[j] - labels[i])
     

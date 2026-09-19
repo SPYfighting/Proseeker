@@ -30,7 +30,6 @@ def get_all_single_mutants(seq: str) -> list[str]:
     for i, original_aa in enumerate(seq_list):
         for new_aa in STANDARD_AA:
             if new_aa != original_aa:
-                # Create mutation
                 new_seq_list = seq_list.copy()
                 new_seq_list[i] = new_aa
                 mutants.append("".join(new_seq_list))
@@ -90,7 +89,7 @@ def get_random_mutants(seq: str, num_mutants: int = 50, num_edits: int = 1) -> l
     return list(mutants)
 
 def batch_score(model, tokenizer, parent_seq, candidate_seqs, batch_size=32):
-    """Helper function: batch scoring for candidate sequences"""
+    """Score candidates relative to a parent sequence in batches."""
     model.eval()
     scores = []
     device = next(model.parameters()).device
@@ -124,7 +123,7 @@ def main():
         help='Generation strategy: saturation (full single-point scan), greedy_stack (greedy stacking-double mutation), random',
     )
     parser.add_argument('--random_count', type=int, default=100, help='Number of sequences to generate under random strategy')
-    parser.add_argument('--stack_top_n', type=int, default=20, help='Under greedy stacking strategy, select top N beneficial single-point mutations for combination')
+    parser.add_argument('--stack_top_n', type=int, default=20, help='Under greedy stacking, combine the N highest-scoring single-point mutations')
     parser.add_argument(
         '--manual_parents_csv',
         type=str,
@@ -164,11 +163,10 @@ def main():
 
     # --- 2. Load Data and Model ---
     measured_base = config.PATH_MEASURED_DATA
-    # Simple path inference logic
     measured_path = measured_base.replace('round1', f'round{args.round}')
     if not os.path.exists(measured_path):
         print(f"WARNING: Current round measurement file {measured_path} not found, will fallback to base file {measured_base}.")
-        measured_path = measured_base  # Fallback
+        measured_path = measured_base
 
     print(f"Reading measurement data: {measured_path}")
     measured_df = pd.read_csv(measured_path)
@@ -208,7 +206,6 @@ def main():
     print(f"Fine-tuning settings | batch_size=16 | lr=2e-5 | max_steps={config.ITER_MICRO_STEPS} | data_size={len(dataset)}")
     
     model.train()
-    # Fine-tuning loop
     steps = 0
     max_steps = config.ITER_MICRO_STEPS
     fine_tune_start = time.time()
@@ -229,7 +226,6 @@ def main():
                 print(f"  step {steps}/{max_steps} | loss={loss.item():.4f} | elapsed={elapsed/60:.1f}m | ETA={eta/60:.1f}m")
             if steps >= max_steps: break
     
-    # Save fine-tuned model
     final_model_path = os.path.join(out_dir, 'pytorch_model_iter_final.bin')
     torch.save(model.state_dict(), final_model_path)
     print("Fine-tuning completed")
@@ -240,7 +236,6 @@ def main():
     
     # Score all measured sequences in current round (find best as parents)
     unique_candidates = list(measured_df['child'].unique())
-    # Supplement: also compatible if 'sequence' column exists
     if not unique_candidates and 'sequence' in measured_df.columns:
         unique_candidates = list(measured_df['sequence'].unique())
 
@@ -258,10 +253,8 @@ def main():
     scores = batch_score(model, tokenizer, default_parent, unique_candidates)
     scored_candidates = sorted(list(zip(unique_candidates, scores)), key=lambda x: x[1], reverse=True)
 
-    # Save scoring results for reference
     pd.DataFrame(scored_candidates, columns=['sequence', 'score']).to_csv(os.path.join(out_dir, 'current_round_ranking.csv'), index=False)
 
-    # Select Top-K parents
     k = min(args.top_k, len(scored_candidates))
 
 
@@ -297,31 +290,28 @@ def main():
 
             singles = get_all_single_mutants(parent_seq)
             s_scores = batch_score(model, tokenizer, parent_seq, singles, batch_size=64)
-            # Select Top N beneficial mutations (score > 0 or top ranked)
+            # Keep the N highest-scoring single-point mutants.
             zipped = sorted(list(zip(singles, s_scores)), key=lambda x: x[1], reverse=True)
             top_singles = [z[0] for z in zipped[:args.stack_top_n]]
             
             # Parse mutation sites and combine
             def extract_mutation(p, c):
-                # Return (index, new_aa)
                 diffs = []
                 for i, (aa_p, aa_c) in enumerate(zip(p, c)):
                     if aa_p != aa_c:
                         diffs.append((i, aa_c))
-                return diffs  # list of tuples
+                return diffs
             
             mut_infos = []
             for s in top_singles:
                 diffs = extract_mutation(parent_seq, s)
-                if len(diffs) == 1:  # Ensure single-point
+                if len(diffs) == 1:
                     mut_infos.append(diffs[0])
             
-            # Combination
             combos = itertools.combinations(mut_infos, 2)
             for (pos1, aa1), (pos2, aa2) in combos:
                 if pos1 == pos2: continue  # Same position cannot be stacked
                 
-                # Build double mutation
                 new_l = list(parent_seq)
                 new_l[pos1] = aa1
                 new_l[pos2] = aa2
