@@ -14,11 +14,10 @@ see the [TdT demo](demo.md).
    first-token embeddings to the child-minus-parent difference in training labels.
    The TdT examples use log-activity differences.
 4. **Uncertainty:** the default ensemble contains five independently seeded
-   models, with ten Monte Carlo dropout passes per model. The resulting 50
-   predictions per pair provide a mean and empirical predictive dispersion.
+   models, with ten Monte Carlo dropout passes per model to estimate a mean and
+   predictive dispersion.
 
-The model uses sequence inputs. UCB scores (`mean + beta * std`) assist candidate
-ranking. Final experimental candidates are selected manually using the predicted
+UCB scores (`mean + beta * std`) assist candidate ranking. Final experimental candidates are selected manually using the predicted
 mean, predictive dispersion, library constraints, experimental feasibility and
 the objectives of each round.
 
@@ -40,12 +39,9 @@ script subtracts the supplied labels; it does not normalize or log-transform
 them. If activity values are stored in a column named `log_activity`, name that
 column `label` before running the pairing script.
 
-Provide amino acid sequences in `parent` and `child`, not mutation notation. The
-pair dataset accepts the 20 standard amino acid letters and rejects sequences
-longer than `MAX_LEN` in `config.py`. The tokenizer also uses this length limit,
-including special tokens; with the default of 512, use at most 510 residues to
-retain the full sequence. The demo's 383 residues occupy 385 tokens before
-padding.
+Provide sequences using the 20 standard amino acid letters in `parent` and
+`child`, not mutation notation. With the default `MAX_LEN=512`, use at most
+510 residues so that the full sequence and special tokens fit the model input.
 
 Create pairwise data from labeled sequences:
 

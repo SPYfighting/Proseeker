@@ -2,8 +2,6 @@
 
 The examples contain four training pairs and two candidate pairs from the TdT
 data used with PROseeker. All parent and child sequences are 383 amino acids long.
-The sequence strings and training labels are retained from the source pair
-tables.
 
 | File | Rows | Columns |
 |---|---:|---|
@@ -21,8 +19,7 @@ estimate predictive accuracy.
 
 Complete the [environment setup](../README.md#installation), then run this block
 from the repository root in the activated environment. Use a fresh output
-directory for each run. The parentheses keep the demo settings within this shell
-block.
+directory for each run.
 
 ```bash
 (
@@ -104,8 +101,7 @@ The prediction file contains two rows, sorted by `ucb_score`:
 | `total_variance` | Sum of the two variance terms |
 | `ucb_score` | `mean_score + beta * sqrt(total_variance)`; beta is 0.5 in the demo |
 
-The variance column names refer to these computations. MC dropout dispersion
+The mean is taken across both members and their MC passes. MC dropout dispersion
 does not separately estimate experimental measurement noise.
 
-Prediction reloads the two saved models. The mean is taken across both members
-and their MC passes. See the [verification results](verification.md#demo).
+See the [verification results](verification.md#demo).
